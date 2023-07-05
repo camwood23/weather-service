@@ -2,7 +2,7 @@ package com.disney.app.domain;
 
 import com.disney.app.application.model.Daily;
 import com.disney.app.application.model.WeatherResponse;
-import com.disney.app.infrastructure.ForecastResponse;
+import com.disney.app.infrastructure.model.ForecastResponse;
 import com.disney.app.infrastructure.TimeClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,6 +14,9 @@ import java.util.Locale;
 
 @Component
 public class ForecastMapper {
+    private static final String FAHRENHEIT_SYMBOL = "F";
+    private static final String TODAY = "Today";
+    private static final String TONIGHT = "Tonight";
     private final TimeClient timeClient;
 
     @Autowired
@@ -22,7 +25,10 @@ public class ForecastMapper {
     }
 
     public Mono<WeatherResponse> map(Mono<ForecastResponse> forecastResponse) {
-        return forecastResponse.map(forecast -> forecast.getProperties().getPeriods().get(0))
+        return forecastResponse.map(forecast -> forecast.getProperties().getPeriods()
+                        .stream().filter(period -> period.getNumber() == 1)
+                        .findFirst()
+                        .orElseThrow(() -> new NoPeriodFoundException("No temperature found for today")))
                 .map(period ->
                     Daily.builder()
                         .temp_high_celsius(convertPeriodToCelsius(period))
@@ -34,6 +40,6 @@ public class ForecastMapper {
     }
 
     private int convertPeriodToCelsius(ForecastResponse.Period period) {
-        return period.getTemperatureUnit().equals("F") ? ((period.getTemperature()-32)*5)/9 : period.getTemperature();
+        return FAHRENHEIT_SYMBOL.equals(period.getTemperatureUnit()) ? ((period.getTemperature()-32)*5)/9 : period.getTemperature();
     }
 }

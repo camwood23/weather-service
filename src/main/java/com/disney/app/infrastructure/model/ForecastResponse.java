@@ -1,4 +1,4 @@
-package com.disney.app.infrastructure;
+package com.disney.app.infrastructure.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
@@ -22,6 +22,7 @@ public class ForecastResponse {
     @NoArgsConstructor
     @Data
     public static class Period {
+        private int number;
         @NonNull
         private String name;
         private int temperature;

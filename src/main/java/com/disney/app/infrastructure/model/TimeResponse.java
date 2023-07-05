@@ -1,4 +1,4 @@
-package com.disney.app.infrastructure;
+package com.disney.app.infrastructure.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
