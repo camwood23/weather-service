@@ -15,8 +15,6 @@ import java.util.Locale;
 @Component
 public class ForecastMapper {
     private static final String FAHRENHEIT_SYMBOL = "F";
-    private static final String TODAY = "Today";
-    private static final String TONIGHT = "Tonight";
     private final TimeClient timeClient;
 
     @Autowired
