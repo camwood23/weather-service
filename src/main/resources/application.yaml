@@ -1,0 +1,7 @@
+clients:
+  time:
+    host: http://worldtimeapi.org
+    path: /api/timezone/America/New_York
+  weather:
+    host: https://api.weather.gov
+    path: /gridpoints/MLB/33,70/forecast

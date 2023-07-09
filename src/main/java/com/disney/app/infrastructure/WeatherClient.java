@@ -1,5 +1,6 @@
 package com.disney.app.infrastructure;
 
+import com.disney.app.config.ApplicationConfigs;
 import com.disney.app.infrastructure.model.ForecastResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -14,19 +15,19 @@ public class WeatherClient {
 
     private static final Logger logger = LoggerFactory.getLogger(WeatherClient.class);
 
-    private static final String FORECAST_HOST = "https://api.weather.gov";
-    private static final String FORECAST_PATH = "/gridpoints/MLB/33,70/forecast";
+    private final ApplicationConfigs.WeatherClientConfigs weatherClientConfigs;
 
     private final WebClient client;
 
-    public WeatherClient(WebClient.Builder builder) {
+    public WeatherClient(WebClient.Builder builder, ApplicationConfigs.WeatherClientConfigs weatherClientConfigs) {
+        this.weatherClientConfigs = weatherClientConfigs;
         this.client = builder
-                .baseUrl(FORECAST_HOST)
+                .baseUrl(weatherClientConfigs.getHost())
                 .build();
     }
 
     public Mono<ForecastResponse> getForecast() {
-        return this.client.get().uri(FORECAST_PATH)
+        return this.client.get().uri(weatherClientConfigs.getPath())
                 .retrieve()
                 .bodyToMono(ForecastResponse.class)
                 .doOnNext(response -> logger.info(response.toString()));

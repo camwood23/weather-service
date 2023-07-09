@@ -1,5 +1,6 @@
 package com.disney.app.infrastructure;
 
+import com.disney.app.config.ApplicationConfigs;
 import com.disney.app.infrastructure.model.TimeResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -15,19 +16,19 @@ import java.time.OffsetDateTime;
 public class TimeClient {
     private static final Logger logger = LoggerFactory.getLogger(TimeClient.class);
 
-    private static final String TIME_HOST = "http://worldtimeapi.org";
-    private static final String TIME_PATH = "/api/timezone/America/New_York";
+    private final ApplicationConfigs.TimeClientConfigs timeClientConfigs;
 
     private final WebClient client;
 
-    public TimeClient(WebClient.Builder builder) {
+    public TimeClient(WebClient.Builder builder, ApplicationConfigs.TimeClientConfigs timeClientConfigs) {
+        this.timeClientConfigs = timeClientConfigs;
         this.client = builder
-                .baseUrl(TIME_HOST)
+                .baseUrl(timeClientConfigs.getHost())
                 .build();
     }
 
     public Mono<TimeResponse> getCurrentTime() {
-        return this.client.get().uri(TIME_PATH)
+        return this.client.get().uri(timeClientConfigs.getPath())
                 .retrieve()
                 .bodyToMono(TimeResponse.class)
                 .doOnNext(response -> logger.info(response.toString()))
