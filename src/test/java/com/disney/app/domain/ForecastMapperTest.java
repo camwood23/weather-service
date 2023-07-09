@@ -2,12 +2,9 @@ package com.disney.app.domain;
 
 import com.disney.app.application.model.WeatherResponse;
 import com.disney.app.infrastructure.model.ForecastResponse;
-import com.disney.app.infrastructure.TimeClient;
-import com.disney.app.infrastructure.model.TimeResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -17,28 +14,19 @@ import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import static org.mockito.Mockito.when;
-
-@ExtendWith(MockitoExtension.class)
 public class ForecastMapperTest {
-    private static final OffsetDateTime NOW = OffsetDateTime.now();
+    private static final OffsetDateTime BEFORE_SIX = OffsetDateTime.parse("2023-07-09T17:00:00-04:00");
+    private static final OffsetDateTime AFTER_SIX = OffsetDateTime.parse("2023-07-09T19:00:00-04:00");
+    private static final String DAY_NAME = "Sunday";
     private static final int TEMP_IN_CELSIUS = 26;
     private static final int TEMP_IN_FAHRENHEIT = 80;
     private static final String FORECAST_BLURP = "Sunny day";
     private static final String FAHRENHEIT_SYMBOL = "F";
 
-    @Mock
-    private TimeClient timeClient;
-
-    @InjectMocks
-    private ForecastMapper forecastMapper;
-
-    public void timeClientReturnsNow() {
-        when(timeClient.getCurrentTime()).thenReturn(Mono.just(new TimeResponse(NOW)));
-    }
+    private final ForecastMapper forecastMapper = new ForecastMapper();
 
     @Test
-    public void testMapOnlyToday() {
+    public void testMapMaxOfTodayTonight() {
         ForecastResponse response = new ForecastResponse();
         response.setProperties(new ForecastResponse.Properties());
         response.getProperties().setPeriods(new ArrayList<>());
@@ -48,21 +36,78 @@ public class ForecastMapperTest {
         period1.setTemperature(TEMP_IN_FAHRENHEIT);
         period1.setShortForecast(FORECAST_BLURP);
         period1.setTemperatureUnit(FAHRENHEIT_SYMBOL);
+        period1.setStartTime(BEFORE_SIX);
         ForecastResponse.Period period2 = new ForecastResponse.Period();
         period2.setNumber(2);
-        period2.setName("Tomorrow");
-        period2.setTemperature(90);
+        period2.setName("Tonight");
+        period2.setTemperature(70);
+        period2.setStartTime(AFTER_SIX);
         response.getProperties().getPeriods().add(period1);
         response.getProperties().getPeriods().add(period2);
-
-        timeClientReturnsNow();
 
         Mono<WeatherResponse> weatherResponseMono = forecastMapper.map(Mono.just(response));
         StepVerifier.create(weatherResponseMono)
                 .expectNextMatches(weatherResponse ->
                         weatherResponse.getDaily().size() == 1 &&
-                                weatherResponse.getDaily().get(0).getDay_name().equals(
-                                        NOW.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.US)) &&
+                                weatherResponse.getDaily().get(0).getDay_name().equals(DAY_NAME) &&
+                                weatherResponse.getDaily().get(0).getTemp_high_celsius() == TEMP_IN_CELSIUS &&
+                                weatherResponse.getDaily().get(0).getForecast_blurp().equals(FORECAST_BLURP)
+                )
+                .expectComplete()
+                .verify();
+    }
+
+    @Test
+    public void testMapWithOnlyTonight() {
+        ForecastResponse response = new ForecastResponse();
+        response.setProperties(new ForecastResponse.Properties());
+        response.getProperties().setPeriods(new ArrayList<>());
+        ForecastResponse.Period period1 = new ForecastResponse.Period();
+        period1.setNumber(1);
+        period1.setName("Tonight");
+        period1.setTemperature(TEMP_IN_FAHRENHEIT);
+        period1.setShortForecast(FORECAST_BLURP);
+        period1.setTemperatureUnit(FAHRENHEIT_SYMBOL);
+        period1.setStartTime(AFTER_SIX);
+        response.getProperties().getPeriods().add(period1);
+
+        Mono<WeatherResponse> weatherResponseMono = forecastMapper.map(Mono.just(response));
+        StepVerifier.create(weatherResponseMono)
+                .expectNextMatches(weatherResponse ->
+                        weatherResponse.getDaily().size() == 1 &&
+                                weatherResponse.getDaily().get(0).getDay_name().equals(DAY_NAME) &&
+                                weatherResponse.getDaily().get(0).getTemp_high_celsius() == TEMP_IN_CELSIUS &&
+                                weatherResponse.getDaily().get(0).getForecast_blurp().equals(FORECAST_BLURP)
+                )
+                .expectComplete()
+                .verify();
+    }
+
+    @Test
+    public void testMapMaxOfTodayTonightWithHotterNight() {
+        ForecastResponse response = new ForecastResponse();
+        response.setProperties(new ForecastResponse.Properties());
+        response.getProperties().setPeriods(new ArrayList<>());
+        ForecastResponse.Period period1 = new ForecastResponse.Period();
+        period1.setNumber(1);
+        period1.setName("Today");
+        period1.setTemperature(70);
+        period1.setShortForecast(FORECAST_BLURP);
+        period1.setTemperatureUnit(FAHRENHEIT_SYMBOL);
+        period1.setStartTime(BEFORE_SIX);
+        ForecastResponse.Period period2 = new ForecastResponse.Period();
+        period2.setNumber(2);
+        period2.setName("Tonight");
+        period2.setTemperature(TEMP_IN_FAHRENHEIT);
+        period2.setStartTime(AFTER_SIX);
+        response.getProperties().getPeriods().add(period1);
+        response.getProperties().getPeriods().add(period2);
+
+        Mono<WeatherResponse> weatherResponseMono = forecastMapper.map(Mono.just(response));
+        StepVerifier.create(weatherResponseMono)
+                .expectNextMatches(weatherResponse ->
+                        weatherResponse.getDaily().size() == 1 &&
+                                weatherResponse.getDaily().get(0).getDay_name().equals(DAY_NAME) &&
                                 weatherResponse.getDaily().get(0).getTemp_high_celsius() == TEMP_IN_CELSIUS &&
                                 weatherResponse.getDaily().get(0).getForecast_blurp().equals(FORECAST_BLURP)
                 )
@@ -80,9 +125,8 @@ public class ForecastMapperTest {
         period1.setName("Today");
         period1.setTemperature(TEMP_IN_CELSIUS);
         period1.setShortForecast(FORECAST_BLURP);
+        period1.setStartTime(BEFORE_SIX);
         response.getProperties().getPeriods().add(period1);
-
-        timeClientReturnsNow();
 
         Mono<WeatherResponse> weatherResponseMono = forecastMapper.map(Mono.just(response));
         StepVerifier.create(weatherResponseMono)

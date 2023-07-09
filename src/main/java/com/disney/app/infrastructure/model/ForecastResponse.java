@@ -1,8 +1,11 @@
 package com.disney.app.infrastructure.model;
 
+import com.disney.app.config.OffsetDateTimeDeserializer;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.*;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
@@ -30,5 +33,8 @@ public class ForecastResponse {
         private String temperatureUnit;
         @NonNull
         private String shortForecast;
+        @NonNull
+        @JsonDeserialize(using = OffsetDateTimeDeserializer.class)
+        private OffsetDateTime startTime;
     }
 }
