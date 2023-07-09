@@ -8,7 +8,7 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 
 @SpringBootApplication
 @EnableWebFlux
-@EnableConfigurationProperties({ApplicationConfigs.TimeClientConfigs.class, ApplicationConfigs.WeatherClientConfigs.class})
+@EnableConfigurationProperties({ApplicationConfigs.WeatherClientConfigs.class})
 public class App
 {
     public static void main( String[] args )

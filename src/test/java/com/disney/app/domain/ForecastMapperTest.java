@@ -92,13 +92,14 @@ public class ForecastMapperTest {
         period1.setNumber(1);
         period1.setName("Today");
         period1.setTemperature(70);
-        period1.setShortForecast(FORECAST_BLURP);
         period1.setTemperatureUnit(FAHRENHEIT_SYMBOL);
         period1.setStartTime(BEFORE_SIX);
         ForecastResponse.Period period2 = new ForecastResponse.Period();
         period2.setNumber(2);
         period2.setName("Tonight");
         period2.setTemperature(TEMP_IN_FAHRENHEIT);
+        period2.setTemperatureUnit(FAHRENHEIT_SYMBOL);
+        period2.setShortForecast(FORECAST_BLURP);
         period2.setStartTime(AFTER_SIX);
         response.getProperties().getPeriods().add(period1);
         response.getProperties().getPeriods().add(period2);

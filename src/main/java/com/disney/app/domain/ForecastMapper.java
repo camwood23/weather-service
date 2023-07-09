@@ -18,7 +18,7 @@ public class ForecastMapper {
     public Mono<WeatherResponse> map(Mono<ForecastResponse> forecastResponse) {
         return forecastResponse.map(forecast -> forecast.getProperties().getPeriods()
                         .stream().filter(period ->
-                            period.getNumber() == 1 || (period.getStartTime().getHour() < 18 && period.getNumber() == 2)
+                            period.getNumber() == 1 || (period.getStartTime().getHour() >= 18 && period.getNumber() == 2)
                         )
                         .max(Comparator.comparingInt(ForecastResponse.Period::getTemperature))
                         .orElseThrow(() -> new NoPeriodFoundException("No temperature found for today")))
