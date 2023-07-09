@@ -4,14 +4,11 @@ import com.disney.app.application.model.WeatherResponse;
 import com.disney.app.infrastructure.model.ForecastResponse;
 import com.disney.app.infrastructure.TimeClient;
 import com.disney.app.infrastructure.model.TimeResponse;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -22,10 +19,9 @@ import java.util.Locale;
 
 import static org.mockito.Mockito.when;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 public class ForecastMapperTest {
-    private final OffsetDateTime NOW = OffsetDateTime.now();
+    private static final OffsetDateTime NOW = OffsetDateTime.now();
     private static final int TEMP_IN_CELSIUS = 26;
     private static final int TEMP_IN_FAHRENHEIT = 80;
     private static final String FORECAST_BLURP = "Sunny day";
@@ -35,11 +31,9 @@ public class ForecastMapperTest {
     private TimeClient timeClient;
 
     @InjectMocks
-    @Autowired
     private ForecastMapper forecastMapper;
 
-    @Before
-    public void setup() {
+    public void timeClientReturnsNow() {
         when(timeClient.getCurrentTime()).thenReturn(Mono.just(new TimeResponse(NOW)));
     }
 
@@ -61,6 +55,7 @@ public class ForecastMapperTest {
         response.getProperties().getPeriods().add(period1);
         response.getProperties().getPeriods().add(period2);
 
+        timeClientReturnsNow();
 
         Mono<WeatherResponse> weatherResponseMono = forecastMapper.map(Mono.just(response));
         StepVerifier.create(weatherResponseMono)
@@ -86,6 +81,8 @@ public class ForecastMapperTest {
         period1.setTemperature(TEMP_IN_CELSIUS);
         period1.setShortForecast(FORECAST_BLURP);
         response.getProperties().getPeriods().add(period1);
+
+        timeClientReturnsNow();
 
         Mono<WeatherResponse> weatherResponseMono = forecastMapper.map(Mono.just(response));
         StepVerifier.create(weatherResponseMono)
