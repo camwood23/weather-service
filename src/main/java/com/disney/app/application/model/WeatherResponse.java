@@ -9,4 +9,12 @@ import java.util.List;
 @Getter
 public class WeatherResponse {
     List<Daily> daily;
+
+    @Builder
+    @Getter
+    public static class Daily {
+        String day_name;
+        int temp_high_celsius;
+        String forecast_blurp;
+    }
 }

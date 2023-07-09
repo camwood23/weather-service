@@ -1,6 +1,5 @@
 package com.disney.app.domain;
 
-import com.disney.app.application.model.Daily;
 import com.disney.app.application.model.WeatherResponse;
 import com.disney.app.infrastructure.model.ForecastResponse;
 import org.springframework.stereotype.Component;
@@ -23,7 +22,7 @@ public class ForecastMapper {
                         .max(Comparator.comparingInt(ForecastResponse.Period::getTemperature))
                         .orElseThrow(() -> new NoPeriodFoundException("No temperature found for today")))
                 .map(period ->
-                    Daily.builder()
+                    WeatherResponse.Daily.builder()
                         .temp_high_celsius(convertPeriodToCelsius(period))
                         .forecast_blurp(period.getShortForecast())
                         .day_name(period.getStartTime().getDayOfWeek().getDisplayName(
