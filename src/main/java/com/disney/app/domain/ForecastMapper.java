@@ -32,7 +32,7 @@ public class ForecastMapper {
                         .temp_high_celsius(convertPeriodToCelsius(period))
                         .forecast_blurp(period.getShortForecast()))
                 .flatMap(dailyBuilder -> timeClient.getCurrentTime().map(timeResponse ->
-                        dailyBuilder.day_name(timeResponse.getUtc_datetime().getDayOfWeek().getDisplayName(
+                        dailyBuilder.day_name(timeResponse.getDatetime().getDayOfWeek().getDisplayName(
                                 TextStyle.FULL, Locale.US)).build()))
                 .map(daily -> WeatherResponse.builder().daily(List.of(daily)).build());
     }
