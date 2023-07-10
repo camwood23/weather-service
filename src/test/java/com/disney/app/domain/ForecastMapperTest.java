@@ -13,15 +13,14 @@ import java.time.OffsetDateTime;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Objects;
 
 public class ForecastMapperTest {
     private static final OffsetDateTime BEFORE_SIX = OffsetDateTime.parse("2023-07-09T17:00:00-04:00");
     private static final OffsetDateTime AFTER_SIX = OffsetDateTime.parse("2023-07-09T19:00:00-04:00");
     private static final String DAY_NAME = "Sunday";
-    private static final int TEMP_IN_CELSIUS = 26;
-    private static final int TEMP_IN_FAHRENHEIT = 80;
+    private static final Double TEMP_IN_CELSIUS = 26.0;
     private static final String FORECAST_BLURP = "Sunny day";
-    private static final String FAHRENHEIT_SYMBOL = "F";
 
     private final ForecastMapper forecastMapper = new ForecastMapper();
 
@@ -33,15 +32,20 @@ public class ForecastMapperTest {
         ForecastResponse.Period period1 = new ForecastResponse.Period();
         period1.setNumber(1);
         period1.setName("Today");
-        period1.setTemperature(TEMP_IN_FAHRENHEIT);
+
         period1.setShortForecast(FORECAST_BLURP);
-        period1.setTemperatureUnit(FAHRENHEIT_SYMBOL);
+        period1.setTemperature(new ForecastResponse.Temperature());
+        period1.getTemperature().setUnitCode(ForecastResponse.TemperatureUnit.CELSIUS);
+        period1.getTemperature().setValue(TEMP_IN_CELSIUS);
         period1.setStartTime(BEFORE_SIX);
+
         ForecastResponse.Period period2 = new ForecastResponse.Period();
         period2.setNumber(2);
         period2.setName("Tonight");
-        period2.setTemperature(70);
         period2.setStartTime(AFTER_SIX);
+        period2.setTemperature(new ForecastResponse.Temperature());
+        period2.getTemperature().setUnitCode(ForecastResponse.TemperatureUnit.CELSIUS);
+        period2.getTemperature().setValue(25.0);
         response.getProperties().getPeriods().add(period1);
         response.getProperties().getPeriods().add(period2);
 
@@ -50,7 +54,7 @@ public class ForecastMapperTest {
                 .expectNextMatches(weatherResponse ->
                         weatherResponse.getDaily().size() == 1 &&
                                 weatherResponse.getDaily().get(0).getDay_name().equals(DAY_NAME) &&
-                                weatherResponse.getDaily().get(0).getTemp_high_celsius() == TEMP_IN_CELSIUS &&
+                                Objects.equals(weatherResponse.getDaily().get(0).getTemp_high_celsius(), TEMP_IN_CELSIUS) &&
                                 weatherResponse.getDaily().get(0).getForecast_blurp().equals(FORECAST_BLURP)
                 )
                 .expectComplete()
@@ -65,9 +69,10 @@ public class ForecastMapperTest {
         ForecastResponse.Period period1 = new ForecastResponse.Period();
         period1.setNumber(1);
         period1.setName("Tonight");
-        period1.setTemperature(TEMP_IN_FAHRENHEIT);
+        period1.setTemperature(new ForecastResponse.Temperature());
+        period1.getTemperature().setUnitCode(ForecastResponse.TemperatureUnit.CELSIUS);
+        period1.getTemperature().setValue(TEMP_IN_CELSIUS);
         period1.setShortForecast(FORECAST_BLURP);
-        period1.setTemperatureUnit(FAHRENHEIT_SYMBOL);
         period1.setStartTime(AFTER_SIX);
         response.getProperties().getPeriods().add(period1);
 
@@ -76,7 +81,7 @@ public class ForecastMapperTest {
                 .expectNextMatches(weatherResponse ->
                         weatherResponse.getDaily().size() == 1 &&
                                 weatherResponse.getDaily().get(0).getDay_name().equals(DAY_NAME) &&
-                                weatherResponse.getDaily().get(0).getTemp_high_celsius() == TEMP_IN_CELSIUS &&
+                                Objects.equals(weatherResponse.getDaily().get(0).getTemp_high_celsius(), TEMP_IN_CELSIUS) &&
                                 weatherResponse.getDaily().get(0).getForecast_blurp().equals(FORECAST_BLURP)
                 )
                 .expectComplete()
@@ -91,14 +96,16 @@ public class ForecastMapperTest {
         ForecastResponse.Period period1 = new ForecastResponse.Period();
         period1.setNumber(1);
         period1.setName("Today");
-        period1.setTemperature(70);
-        period1.setTemperatureUnit(FAHRENHEIT_SYMBOL);
+        period1.setTemperature(new ForecastResponse.Temperature());
+        period1.getTemperature().setUnitCode(ForecastResponse.TemperatureUnit.CELSIUS);
+        period1.getTemperature().setValue(25.0);
         period1.setStartTime(BEFORE_SIX);
         ForecastResponse.Period period2 = new ForecastResponse.Period();
         period2.setNumber(2);
         period2.setName("Tonight");
-        period2.setTemperature(TEMP_IN_FAHRENHEIT);
-        period2.setTemperatureUnit(FAHRENHEIT_SYMBOL);
+        period2.setTemperature(new ForecastResponse.Temperature());
+        period2.getTemperature().setUnitCode(ForecastResponse.TemperatureUnit.CELSIUS);
+        period2.getTemperature().setValue(TEMP_IN_CELSIUS);
         period2.setShortForecast(FORECAST_BLURP);
         period2.setStartTime(AFTER_SIX);
         response.getProperties().getPeriods().add(period1);
@@ -109,30 +116,8 @@ public class ForecastMapperTest {
                 .expectNextMatches(weatherResponse ->
                         weatherResponse.getDaily().size() == 1 &&
                                 weatherResponse.getDaily().get(0).getDay_name().equals(DAY_NAME) &&
-                                weatherResponse.getDaily().get(0).getTemp_high_celsius() == TEMP_IN_CELSIUS &&
+                                Objects.equals(weatherResponse.getDaily().get(0).getTemp_high_celsius(), TEMP_IN_CELSIUS) &&
                                 weatherResponse.getDaily().get(0).getForecast_blurp().equals(FORECAST_BLURP)
-                )
-                .expectComplete()
-                .verify();
-    }
-
-    @Test
-    public void testMapWithNullTempUnit() {
-        ForecastResponse response = new ForecastResponse();
-        response.setProperties(new ForecastResponse.Properties());
-        response.getProperties().setPeriods(new ArrayList<>());
-        ForecastResponse.Period period1 = new ForecastResponse.Period();
-        period1.setNumber(1);
-        period1.setName("Today");
-        period1.setTemperature(TEMP_IN_CELSIUS);
-        period1.setShortForecast(FORECAST_BLURP);
-        period1.setStartTime(BEFORE_SIX);
-        response.getProperties().getPeriods().add(period1);
-
-        Mono<WeatherResponse> weatherResponseMono = forecastMapper.map(Mono.just(response));
-        StepVerifier.create(weatherResponseMono)
-                .expectNextMatches(weatherResponse ->
-                                weatherResponse.getDaily().get(0).getTemp_high_celsius() == TEMP_IN_CELSIUS // If no unit is specified, assume Celsius
                 )
                 .expectComplete()
                 .verify();
@@ -145,7 +130,9 @@ public class ForecastMapperTest {
         response.getProperties().setPeriods(new ArrayList<>());
         ForecastResponse.Period period1 = new ForecastResponse.Period();
         period1.setName("Today");
-        period1.setTemperature(TEMP_IN_CELSIUS);
+        period1.setTemperature(new ForecastResponse.Temperature());
+        period1.getTemperature().setUnitCode(ForecastResponse.TemperatureUnit.CELSIUS);
+        period1.getTemperature().setValue(TEMP_IN_CELSIUS);
         period1.setShortForecast(FORECAST_BLURP);
         response.getProperties().getPeriods().add(period1);
 

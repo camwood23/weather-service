@@ -14,7 +14,7 @@ public class WeatherResponse {
     @Getter
     public static class Daily {
         String day_name;
-        int temp_high_celsius;
+        Double temp_high_celsius;
         String forecast_blurp;
     }
 }

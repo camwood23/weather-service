@@ -12,26 +12,21 @@ import java.util.Locale;
 
 @Component
 public class ForecastMapper {
-    private static final String FAHRENHEIT_SYMBOL = "F";
 
     public Mono<WeatherResponse> map(Mono<ForecastResponse> forecastResponse) {
         return forecastResponse.map(forecast -> forecast.getProperties().getPeriods()
                         .stream().filter(period ->
                             period.getNumber() == 1 || (period.getStartTime().getHour() >= 18 && period.getNumber() == 2)
                         )
-                        .max(Comparator.comparingInt(ForecastResponse.Period::getTemperature))
+                        .max(Comparator.comparingDouble(ForecastResponse.Period::getTemperatureValue))
                         .orElseThrow(() -> new NoPeriodFoundException("No temperature found for today")))
                 .map(period ->
                     WeatherResponse.Daily.builder()
-                        .temp_high_celsius(convertPeriodToCelsius(period))
+                        .temp_high_celsius(period.getTemperatureValue())
                         .forecast_blurp(period.getShortForecast())
                         .day_name(period.getStartTime().getDayOfWeek().getDisplayName(
                                 TextStyle.FULL, Locale.US))
                         .build())
                 .map(daily -> WeatherResponse.builder().daily(List.of(daily)).build());
-    }
-
-    private int convertPeriodToCelsius(ForecastResponse.Period period) {
-        return FAHRENHEIT_SYMBOL.equals(period.getTemperatureUnit()) ? ((period.getTemperature()-32)*5)/9 : period.getTemperature();
     }
 }

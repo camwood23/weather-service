@@ -28,6 +28,7 @@ public class WeatherClient {
 
     public Mono<ForecastResponse> getForecast() {
         return this.client.get().uri(weatherClientConfigs.getPath())
+                .header("Feature-Flags", "forecast_temperature_qv")
                 .retrieve()
                 .bodyToMono(ForecastResponse.class)
                 .doOnNext(response -> logger.info(response.toString()));
